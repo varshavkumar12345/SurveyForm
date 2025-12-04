@@ -12,16 +12,19 @@ app = Flask(__name__)
 CORS(app)
 
 # --- MongoDB Connection Setup ---
-MONGODB_URI = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/')
+MONGODB_URI = os.getenv('MONGODB_URI')
 
+if not MONGODB_URI:
+    print("ERROR: MONGODB_URI not found in environment variables!")
+    
 try:
     client = MongoClient(MONGODB_URI)
     db = client['survey_db']
     collection = db['reports']
-    client.server_info() 
-    print("Successfully connected to MongoDB.")
+    client.server_info()
+    print("Successfully connected to MongoDB Atlas.")
 except Exception as e:
-    print(f"Error: Could not connect to MongoDB. Please ensure it's running. Details: {e}")
+    print(f"Error: Could not connect to MongoDB Atlas. Details: {e}")
     client = None
 
 @app.route('/final-report', methods=['POST'])
@@ -81,3 +84,4 @@ def final_report():
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
