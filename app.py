@@ -12,8 +12,8 @@ CORS(app)
 MONGODB_URI = os.getenv('MONGODB_URI')
 
 if not MONGODB_URI:
-    print("⚠ WARNING: MONGODB_URI not found. Using localhost fallback.")
-    MONGODB_URI = "mongodb://localhost:27017/"
+    print("⚠ WARNING: MONGODB_URI not found.")# Using localhost fallback.")
+    #MONGODB_URI = "mongodb://localhost:27017/"
 
 try:
     client = MongoClient(MONGODB_URI)
@@ -86,3 +86,4 @@ def final_report():
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+
