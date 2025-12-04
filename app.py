@@ -70,7 +70,7 @@ def final_report():
         'final_answers': answers,
         'total_time_seconds': round(total_time_sec, 2),
         'feedback': feedback,
-        'authentic': False,
+        #'authentic': False,
     }
 
     try:
@@ -90,3 +90,4 @@ def final_report():
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
