@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Survey Form</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      background: #fff;
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 30px 30px 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      overflow-y: auto;
+      height: 80vh;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .question {
+      margin-bottom: 30px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .question:last-child {
+      border-bottom: none;
+    }
+    .rating {
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+    }
+    .rating label {
+      cursor: pointer;
+      padding: 5px 10px;
+      border-radius: 5px;
+      background: #f0f0f0;
+      transition: background 0.2s;
+    }
+    .rating input[type="radio"]:checked + label {
+      background: #007bff;
+      color: #fff;
+    }
+    textarea, input[type="text"] {
+      width: 100%;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      padding: 8px;
+      resize: vertical;
+      font-size: 1em;
+      box-sizing: border-box;
+    }
+    .submit-btn {
+      width: 100%;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 5px;
+      font-size: 1.1em;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.2s;
+    }
+    .submit-btn:hover {
+      background: #0056b3;
+    }
+    .thanks {
+      text-align: center;
+      font-size: 1.2em;
+      color: #28a745;
+      margin-top: 30px;
+    }
+    .loading {
+      text-align: center;
+      font-size: 1.1em;
+      color: #666;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Feedback Survey</h2>
+    <div id="loading" class="loading">Loading questions...</div>
+    <form id="survey-form" style="display:none;">
+      <div class="question">
+        <label for="user_id"><b>Your User ID:</b></label><br/>
+        <input type="text" id="user_id" name="user_id" placeholder="e.g., user123" required style="margin-top: 5px;">
+      </div>
+
+      <div id="questions"></div>
+      <div class="question">
+        <label for="feedback"><b>Additional Feedback (optional):</b></label><br/>
+        <textarea id="feedback" name="feedback" placeholder="Your comments..."></textarea>
+      </div>
+      <button type="submit" class="submit-btn">Submit</button>
+    </form>
+    <div id="thank-you" class="thanks" style="display:none;">Thank you for your feedback!</div>
+  </div>
+
+  <script>
+    // --- Mouse Tracking ---
+    let mouseData = [];
+    let optionLogs = [];
+    let inactivityTimer;
+
+    // Function to reset inactivity timer
+    function resetInactivityTimer() {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        alert('Session expired due to inactivity');
+        location.reload();
+      }, 300000); // 5 minutes
+    }
+
+    // Initialize timer
+    resetInactivityTimer();
+
+    document.addEventListener('mousemove', function(e) {
+      const timestamp = Date.now();
+      mouseData.push({ x: e.clientX, y: e.clientY, time: timestamp });
+      resetInactivityTimer();
+    });
+
+
+
+    document.addEventListener('keypress', function(e) {
+      resetInactivityTimer();
+    });
+
+    // --- Questions embedded directly ---
+    const questionsData = {
+      "questions": [
+        "How satisfied are you with our service?",
+        "How easy was it to navigate the website?",
+        "How likely are you to recommend us?",
+        "How satisfied are you with the response time?",
+        "How visually appealing did you find the website?",
+        "How clear was the information provided?",
+        "How satisfied are you with the product quality?",
+        "How likely are you to return?",
+        "How helpful was the support?",
+        "How would you rate your overall experience?"
+      ]
+    };
+
+    // Load questions immediately
+    const questions = questionsData.questions;
+    
+    // Hide loading and show form
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('survey-form').style.display = 'block';
+      
+      // Generate survey questions dynamically
+      const questionsDiv = document.getElementById('questions');
+      questions.forEach((q, idx) => {
+        const qDiv = document.createElement('div');
+        qDiv.className = 'question';
+        qDiv.innerHTML = `<b>Q${idx+1}:</b> ${q}<br/>`;
+        const ratingDiv = document.createElement('div');
+        ratingDiv.className = 'rating';
+        for (let i = 1; i <= 5; i++) {
+          const radio = document.createElement('input');
+          radio.type = 'radio';
+          radio.name = `q${idx+1}`;
+          radio.id = `q${idx+1}_r${i}`;
+          radio.value = i;
+          radio.style.display = 'none';
+          const label = document.createElement('label');
+          label.htmlFor = radio.id;
+          label.innerText = i;
+          radio.addEventListener('change', function(e) {
+            if (e.target.checked) {
+              const timestamp = Date.now();
+              optionLogs.push({
+                question: idx+1,
+                value: i,
+                time: timestamp,
+                x: window.event ? window.event.clientX : 0,
+                y: window.event ? window.event.clientY : 0
+              });
+            }
+          });
+          ratingDiv.appendChild(radio);
+          ratingDiv.appendChild(label);
+        }
+        qDiv.appendChild(ratingDiv);
+        questionsDiv.appendChild(qDiv);
+      });
+    });
+
+    // --- Form Submission ---
+    document.getElementById('survey-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const userId = document.getElementById('user_id').value;
+
+      const answers = {};
+      let allAnswered = true;
+      for (let i = 1; i <= questions.length; i++) {
+        const selected = document.querySelector(`input[name="q${i}"]:checked`);
+        if (selected) {
+          answers[`q${i}`] = selected.value;
+        } else {
+          allAnswered = false;
+        }
+      }
+      
+      if (!allAnswered) {
+        alert('Please answer all questions.');
+        return;
+      }
+      const feedback = document.getElementById('feedback').value;
+
+      const payload = {
+        userId: userId,
+        movements: mouseData,
+        answers: answers,
+        feedback: feedback,
+        option_logs: optionLogs
+      };
+      fetch(`${window.location.origin}/final-report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        clearTimeout(inactivityTimer); // Stop timer after successful submission
+        document.getElementById('survey-form').style.display = 'none';
+        document.getElementById('thank-you').style.display = 'block';
+      })
+      .catch(err => {
+        alert('Error submitting feedback: ' + err.message);
+      });
+    });
+  </script>
+</body>
+</html>
