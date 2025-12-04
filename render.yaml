@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: survey-app
+    env: python
+    pythonVersion: 3.12
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 2 --worker-class sync --timeout 30
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: FLASK_ENV
+        value: production
+      - key: PORT
+        value: 5000
